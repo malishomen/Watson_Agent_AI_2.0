@@ -391,7 +391,42 @@ def relay_submit(body: RelaySubmitIn):
             # Нормализованный текст задачи
             task_text = route_result.get("normalized_text", body.text)
             
-            # Вызываем /autocode/generate
+            # Опция: создать задачу для Cursor через inbox (если включено)
+            use_cursor_delegation = os.getenv("WATSON_USE_CURSOR_DELEGATION", "false").lower() == "true"
+            
+            if use_cursor_delegation:
+                # Создаем файл задачи для Task Watcher → Cursor
+                try:
+                    import random
+                    from pathlib import Path
+                    
+                    inbox_dir = Path(__file__).parent.parent / "inbox"
+                    inbox_dir.mkdir(exist_ok=True)
+                    
+                    task_id = random.randint(1000, 9999)
+                    task_file = inbox_dir / f"task_{task_id}.task.json"
+                    
+                    task_data = {
+                        "text": task_text,
+                        "dry_run": body.dry_run,
+                        "chat_id": body.chat_id or "api",
+                        "repo_path": repo_path,
+                        "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    
+                    with open(task_file, "w", encoding="utf-8") as f:
+                        json.dump(task_data, f, ensure_ascii=False, indent=2)
+                    
+                    return RelaySubmitOut(
+                        ok=True,
+                        intent="code",
+                        response=f"📋 Задача создана для Cursor: task_{task_id}\n🎯 Task Watcher обработает автоматически"
+                    )
+                except Exception as e:
+                    # Fallback на обычную генерацию
+                    print(f"[RELAY] Cursor delegation failed, using direct generation: {e}")
+            
+            # Вызываем /autocode/generate напрямую
             try:
                 gen_body = AutoCodeGenIn(
                     task=task_text,
