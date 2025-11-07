@@ -28,8 +28,96 @@ def create_cursor_instruction(task_data: dict, task_id: str) -> str:
     text = task_data.get("text", "")
     repo_path = task_data.get("repo_path", "")
     dry_run = task_data.get("dry_run", False)
+    action = task_data.get("action", "generate")  # generate | apply_diff
     
-    instruction = f"""# 🎯 АВТОМАТИЧЕСКАЯ ЗАДАЧА ОТ WATSON AGENT
+    # Проверяем есть ли готовый diff от LLM
+    has_llm_diff = "generated_diff" in task_data
+    llm_analysis = task_data.get("llm_analysis", "")
+    generated_diff = task_data.get("generated_diff", "")
+    
+    if has_llm_diff and action == "apply_diff":
+        # РЕЖИМ: Применить готовый diff от DeepSeek + Qwen
+        instruction = f"""# 🎯 ЗАДАЧА С ГОТОВЫМ DIFF ОТ WATSON LLM
+
+## 📋 Задача: {task_id}
+
+**Описание:**
+{text}
+
+**Репозиторий:**
+`{repo_path}`
+
+**Режим:** {'🧪 DRY-RUN (review diff)' if dry_run else '✅ APPLY (применить готовый diff)'}
+
+---
+
+## 🤖 LLM УЖЕ ОБРАБОТАЛ ЗАДАЧУ
+
+### DeepSeek R1 Analysis:
+```
+{llm_analysis}
+```
+
+### Qwen 2.5 Coder Generated Diff:
+```diff
+{generated_diff}
+```
+
+---
+
+## ⚡ ИНСТРУКЦИИ ДЛЯ CURSOR AI
+
+Cursor, **НЕ генерируй код заново!** Готовый diff уже создан LLM моделями.
+
+Твоя задача:
+
+### 1. Review diff
+- Прочитай diff выше
+- Проверь что он корректен
+- Определи какие файлы затронуты
+
+### 2. {'Покажи summary (НЕ применяй)' if dry_run else 'Примени изменения'}
+{'- Покажи какие файлы будут изменены' if dry_run else '- Используй search_replace для каждого изменения из diff'}
+{'- Создай отчет для review' if dry_run else '- Примени все hunks из diff последовательно'}
+
+### 3. Проверка
+- Убедись что все изменения применены корректно
+- Проверь синтаксис
+{'- Создай summary для review' if dry_run else '- Запусти линтер если есть'}
+
+### 4. Отчет
+Создай файл `cursor_tasks/{task_id}_result.md`:
+
+```markdown
+# Результат: {task_id}
+
+## Задача
+{text}
+
+## LLM Analysis (DeepSeek R1)
+{llm_analysis[:200]}...
+
+## Изменения (из Qwen diff)
+{'- Reviewed diff: N файлов' if dry_run else '- Applied diff: N файлов'}
+
+## Статус
+{'✅ Diff reviewed, ready to apply' if dry_run else '✅ Diff applied successfully'}
+```
+
+---
+
+## 🚨 ВАЖНО
+
+- **НЕ ГЕНЕРИРУЙ** код заново - используй готовый diff!
+- Работай в репозитории: `{repo_path}`
+- {'ТОЛЬКО review, НЕ применяй' if dry_run else 'Применяй diff аккуратно, hunk за hunk'}
+- Создай подробный отчет
+
+**Начинай выполнение!** 🚀
+"""
+    else:
+        # СТАРЫЙ РЕЖИМ: Cursor генерирует сам
+        instruction = f"""# 🎯 АВТОМАТИЧЕСКАЯ ЗАДАЧА ОТ WATSON AGENT
 
 ## 📋 Задача: {task_id}
 
@@ -67,7 +155,7 @@ Cursor AI, выполни следующие шаги:
 {'- Покажи summary изменений' if dry_run else '- Запусти линтер (если есть)'}
 
 ### 5. Отчет
-Создай файл `cursor_tasks/task_{task_id}_result.md` с отчетом:
+Создай файл `cursor_tasks/{task_id}_result.md` с отчетом:
 ```markdown
 # Результат задачи {task_id}
 
@@ -106,13 +194,25 @@ def process_task(task_file: Path):
     """
     Обрабатывает задачу из inbox и создает инструкцию для Cursor
     """
-    print(f"📥 Processing: {task_file.name}")
+    print(f"\n📥 Processing: {task_file.name}")
     
     try:
         with open(task_file, "r", encoding="utf-8") as f:
             task_data = json.load(f)
         
         task_id = task_file.stem  # task_1234
+        
+        # Проверяем есть ли готовый diff от LLM
+        has_llm_diff = "generated_diff" in task_data
+        action = task_data.get("action", "generate")
+        
+        if has_llm_diff:
+            print(f"   🤖 Режим: LLM pre-processed")
+            print(f"   📊 DeepSeek R1 analysis: available")
+            print(f"   📝 Qwen 2.5 diff: {len(task_data.get('generated_diff', ''))} bytes")
+            print(f"   ⚡ Action: {action}")
+        else:
+            print(f"   🎯 Режим: Cursor self-generation")
         
         # Создаем инструкцию для Cursor
         instruction = create_cursor_instruction(task_data, task_id)
@@ -122,9 +222,9 @@ def process_task(task_file: Path):
         with open(cursor_file, "w", encoding="utf-8") as f:
             f.write(instruction)
         
-        print(f"✅ Создана инструкция: {cursor_file.name}")
+        print(f"   ✅ Создана инструкция: {cursor_file.name}")
         print(f"   📄 Откройте файл в Cursor и отправьте в Chat!")
-        print(f"   📂 Путь: {cursor_file}")
+        print(f"   📂 Путь: {cursor_file.absolute()}")
         
         # Логируем обработку
         log_processed(task_file.name)
@@ -135,7 +235,7 @@ def process_task(task_file: Path):
         return True
         
     except Exception as e:
-        print(f"❌ Error processing {task_file.name}: {e}")
+        print(f"   ❌ Error processing {task_file.name}: {e}")
         return False
 
 def main():

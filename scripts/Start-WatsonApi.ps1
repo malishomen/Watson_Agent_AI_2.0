@@ -26,6 +26,9 @@ function Start-Uvicorn([string]$repo, [string]$bindHost, [int]$port) {
   $env:CURSOR_API_URL = [Environment]::GetEnvironmentVariable('CURSOR_API_URL','User')
   $env:CURSOR_API_KEY = [Environment]::GetEnvironmentVariable('CURSOR_API_KEY','User')
   $env:AGENT_HTTP_SHARED_SECRET = [Environment]::GetEnvironmentVariable('AGENT_HTTP_SHARED_SECRET','User')
+  
+  # Cursor delegation
+  $env:WATSON_USE_CURSOR_DELEGATION = [Environment]::GetEnvironmentVariable('WATSON_USE_CURSOR_DELEGATION','User')
 
   Push-Location $repo
   try {
