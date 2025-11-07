@@ -1,0 +1,38 @@
+﻿import os, sys
+
+# Глушим цвет/ANSI — на всякий случай
+os.environ.setdefault("PY_COLORS", "0")
+os.environ.setdefault("NO_COLOR", "1")
+os.environ.setdefault("TERM", "dumb")
+
+# Безопасные обёртки для stdout/stderr: игнорируем "underlying buffer has been detached"
+class _SafeStream:
+    def __init__(self, fallback, is_stdout):
+        self._fallback = fallback
+        self._is_stdout = is_stdout
+    def write(self, s):
+        try:
+            return self._fallback.write(s)
+        except ValueError:
+            # Пишем напрямую в оригинальные потоки интерпретатора
+            target = sys.__stdout__ if self._is_stdout else sys.__stderr__
+            try:
+                return target.write(s)
+            except Exception:
+                return 0
+    def flush(self):
+        try:
+            return self._fallback.flush()
+        except Exception:
+            try:
+                return (sys.__stdout__ if self._is_stdout else sys.__stderr__).flush()
+            except Exception:
+                return None
+    def __getattr__(self, name):
+        return getattr(self._fallback, name, None)
+
+# Подменяем только если ещё не подменено
+if not isinstance(getattr(sys, "stdout", None), _SafeStream):
+    sys.stdout = _SafeStream(sys.__stdout__, True)
+if not isinstance(getattr(sys, "stderr", None), _SafeStream):
+    sys.stderr = _SafeStream(sys.__stderr__, False)

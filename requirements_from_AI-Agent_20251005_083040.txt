@@ -1,0 +1,25 @@
+# AI Agent + Cursor Automation - Dependencies
+
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# UI Automation
+pyautogui==0.9.54
+pillow==10.1.0
+keyboard==0.13.5
+
+# HTTP requests
+requests==2.31.0
+httpx==0.25.2
+
+# Database (sqlite3 is built-in to Python)
+
+# Development
+pytest==7.4.3
+black==23.11.0
+flake8==6.1.0
+
+# Optional: Telegram Bot
+python-telegram-bot==20.7

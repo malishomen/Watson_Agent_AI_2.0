@@ -1,0 +1,41 @@
+# Staging Profile
+environment: staging
+
+api:
+  base_url: http://staging.watson.local:8090
+  timeout: 600
+
+llm:
+  base_url: ${LLM_BASE_URL}  # from env
+  api_key: ${LLM_API_KEY}
+  planner_model: ${PLANNER_MODEL}
+  coder_model: ${CODER_MODEL}
+  temperature: 0.2
+  max_tokens: 4096
+
+paths:
+  repo_path: /app/workspace
+  projects_root: /app/projects
+  inbox: /app/inbox
+
+testing:
+  test_cmd: pytest -v --cov=src
+  skip_slow: false
+
+logging:
+  level: INFO
+  file: logs/staging.log
+
+telegram:
+  enabled: true
+
+# Registry and deployment
+registry: ${REGISTRY_URL}              # e.g. registry.example.com
+registry_namespace: ${REGISTRY_NS}     # e.g. watson
+ssh_host: ${STAGING_SSH_HOST}          # IP / DNS staging
+ssh_user: ${STAGING_SSH_USER}          # SSH user
+deploy_path: /opt/apps/${PROJECT_SLUG} # path on server
+compose_file: docker-compose.staging.yml
+backend_port: 8080
+frontend_port: 5173
+

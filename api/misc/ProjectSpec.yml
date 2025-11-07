@@ -1,0 +1,30 @@
+name: "Demo Project — Hello Agent"
+description: "Показательный прогон: создать файл, прочесть его, запустить блокнот, закрыть."
+
+defaults:
+  session: "Danil-PC"
+  base_dir: "D:\\AI-Agent\\Memory"
+
+steps:
+  - action: cd
+    path: "D:\\AI-Agent\\Memory"
+
+  - action: write
+    path: "D:\\AI-Agent\\Memory\\hello.txt"
+    text: "Привет, Данил! Это автозапуск по ТЗ."
+
+  - action: read
+    path: "D:\\AI-Agent\\Memory\\hello.txt"
+
+  - action: run
+    exe: "C:\\Windows\\System32\\notepad.exe"
+    args: "\"D:\\AI-Agent\\Memory\\hello.txt\""
+
+  - action: kill
+    target: "notepad"
+
+  # шаг вне белого списка — должен запросить approve
+  - action: write
+    path: "C:\\temp\\outside.txt"
+    text: "Это проверка безопасности."
+    expect_approve: true

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="1.860" timestamp="2025-10-05T12:00:19.091712" hostname="WIN-JTSARSVBH32"><testcase classname="" name="tests.test_utils" time="0.000"><error message="collection failure">C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\python.py:617: in _importtestmodule
+    mod = import_path(self.path, mode=importmode, root=self.config.rootpath)
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\pathlib.py:567: in import_path
+    importlib.import_module(module_name)
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+&lt;frozen importlib._bootstrap&gt;:1204: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1176: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1147: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:690: in _load_unlocked
+    ???
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\test_utils.py:41: in &lt;module&gt;
+    from .abc import AbstractCookieJar
+E   ImportError: attempted relative import with no known parent package
+
+During handling of the above exception, another exception occurred:
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\config\__init__.py:1611: in getoption
+    val = getattr(self.option, name)
+E   AttributeError: 'Namespace' object has no attribute 'verbose'
+
+The above exception was the direct cause of the following exception:
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\runner.py:341: in from_call
+    result: Optional[TResult] = func()
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\runner.py:372: in &lt;lambda&gt;
+    call = CallInfo.from_call(lambda: list(collector.collect()), "collect")
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\python.py:531: in collect
+    self._inject_setup_module_fixture()
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\python.py:545: in _inject_setup_module_fixture
+    self.obj, ("setUpModule", "setup_module")
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\python.py:310: in obj
+    self._obj = obj = self._getobj()
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\python.py:528: in _getobj
+    return self._importtestmodule()
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\python.py:634: in _importtestmodule
+    if self.config.getoption("verbose") &lt; 2:
+C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\config\__init__.py:1622: in getoption
+    raise ValueError(f"no option named {name!r}") from e
+E   ValueError: no option named 'verbose'</error></testcase></testsuite></testsuites>

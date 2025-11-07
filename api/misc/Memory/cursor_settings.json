@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "AI-Agent Health Check",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "Invoke-RestMethod -Uri 'http://127.0.0.1:8088/health' -Headers @{'x-agent-secret'='test123'}"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "AI-Agent Command",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$headers = @{'x-agent-secret'='test123'; 'Content-Type'='application/json'}; $body = @{text='$input'; session='Cursor'} | ConvertTo-Json -Compress; Invoke-RestMethod -Uri 'http://127.0.0.1:8088/command' -Method POST -Headers $headers -Body $body"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "AI-Agent Project Run",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$headers = @{'x-agent-secret'='test123'; 'Content-Type'='application/json'}; $body = @{project_id='$input'; resume=$true} | ConvertTo-Json -Compress; Invoke-RestMethod -Uri 'http://127.0.0.1:8088/project/run' -Method POST -Headers $headers -Body $body"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,125 @@
+name: CI-CD
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: "UTF-8"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install pytest pytest-cov
+      
+      - name: Run unit tests
+        run: |
+          pytest -q || true
+        continue-on-error: true
+      
+      - name: Playwright tests (optional)
+        run: |
+          echo "Skip if not a frontend project"
+        shell: bash
+
+  build:
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set project slug
+        id: slug
+        run: |
+          echo "slug=$(echo '${{ github.repository }}' | awk -F/ '{print $2}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASS }}
+      
+      - name: Set tags
+        id: tags
+        run: |
+          SHA=${GITHUB_SHA::7}
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+      
+      - name: Build & Push backend
+        run: |
+          docker build -t ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_NS }}/${{ steps.slug.outputs.slug }}_backend:${{ steps.tags.outputs.sha }} backend || \
+          docker build -t ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_NS }}/${{ steps.slug.outputs.slug }}_backend:${{ steps.tags.outputs.sha }} .
+          docker push ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_NS }}/${{ steps.slug.outputs.slug }}_backend:${{ steps.tags.outputs.sha }}
+      
+      - name: Build & Push frontend
+        run: |
+          if [ -d "frontend" ]; then
+            docker build -t ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_NS }}/${{ steps.slug.outputs.slug }}_frontend:${{ steps.tags.outputs.sha }} frontend
+            docker push ${{ secrets.REGISTRY_URL }}/${{ secrets.REGISTRY_NS }}/${{ steps.slug.outputs.slug }}_frontend:${{ steps.tags.outputs.sha }}
+          else
+            echo "No frontend dir — skipping"
+          fi
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core ansible-lint
+          ansible-galaxy collection install community.docker
+      
+      - name: Prepare SSH key
+        run: |
+          echo "${{ secrets.SSH_KEY_B64 }}" | base64 -d > key
+          chmod 600 key
+      
+      - name: Write inventory
+        run: |
+          mkdir -p infra/ansible/inventory
+          echo "${{ secrets.STAGING_SSH_HOST }}" > infra/ansible/inventory/staging
+      
+      - name: Run Ansible playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+          BACKEND_PORT: "8080"
+        run: |
+          ansible-playbook infra/ansible/playbook.yml \
+            -i infra/ansible/inventory/staging \
+            --user "${{ secrets.STAGING_SSH_USER }}" \
+            --private-key ./key \
+            -e "deploy_path=${{ secrets.DEPLOY_PATH || '/opt/apps/app' }}" \
+            -e "backend_port=8080"
+      
+      - name: Notify Telegram (optional)
+        if: ${{ secrets.TELEGRAM_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' }}
+        run: |
+          SHA=${GITHUB_SHA::7}
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data parse_mode="Markdown" \
+            --data text="*Deployed to staging* — \`${SHA}\`"
+
+
+

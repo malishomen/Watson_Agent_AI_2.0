@@ -1,0 +1,293 @@
+[
+  {
+    "title": "Agent: run once",
+    "description": "Одноразовый запрос к агенту",
+    "prompt": "Выполни одноразовый запуск агента со строкой запроса ниже и покажи stdout.",
+    "steps": [
+      {
+        "type": "terminal",
+        "command": "python D:/AI-Agent/Memory/GPT+Deepseek_Agent_memory.py --session Danil-PC --once \"$INPUT\""
+      }
+    ]
+  },
+  {
+    "title": "Agent: start chat",
+    "description": "Запуск интерактивного чата",
+    "steps": [
+      {
+        "type": "terminal",
+        "command": "python D:/AI-Agent/Memory/GPT+Deepseek_Agent_memory.py --session Danil-PC"
+      }
+    ]
+  },
+  {
+    "title": "DB: wipe memory",
+    "description": "Удалить файл памяти (SQLite)",
+    "confirm": true,
+    "steps": [
+      {
+        "type": "terminal",
+        "command": "powershell Remove-Item D:/AI-Agent/Memory/agent_memory.sqlite -Force"
+      }
+    ]
+  },
+  {
+    "title": "LM Studio: ping models",
+    "description": "Проверка, что локальный сервер отвечает",
+    "steps": [
+      {
+        "type": "terminal",
+        "command": "powershell Invoke-WebRequest -Uri \"$env:LM_STUDIO_URL/v1/models\" -Method GET | Select-Object -Expand Content"
+      }
+    ]
+  },
+  {
+    "title": "Agent: set workdir to Memory",
+    "description": "Сохранить рабочую директорию для будущих запусков",
+    "steps": [
+      { "type": "terminal", "command": "python D:/AI-Agent/Memory/GPT+Deepseek_Agent_memory.py --session Danil-PC --once \"/cd D:\\AI-Agent\\Memory\"" },
+      { "type": "terminal", "command": "python D:/AI-Agent/Memory/GPT+Deepseek_Agent_memory.py --session Danil-PC --once \"/pwd\"" }
+    ]
+  },
+  {
+    "title": "Project: run spec",
+    "description": "Запуск сценария из ProjectSpec.yml",
+    "steps": [
+      { "type": "terminal", "command": "pip install pyyaml" },
+      { "type": "terminal", "command": "python D:/AI-Agent/run_project.py D:/AI-Agent/ProjectSpec.yml" }
+    ]
+  },
+  {
+    "title": "API: start server",
+    "description": "Запуск FastAPI сервиса агента (локально)",
+    "steps": [
+      { "type": "terminal", "command": "pip install fastapi uvicorn python-telegram-bot==21.6 pyyaml" },
+      { "type": "terminal", "command": "uvicorn api.fastapi_agent:app --host 127.0.0.1 --port 8088 --reload" }
+    ]
+  },
+  {
+    "title": "Bot: start telegram operator",
+    "description": "Запуск Telegram-оператора (polling)",
+    "steps": [
+      { "type": "terminal", "command": "python bot/telegram_operator.py" }
+    ]
+  },
+  {
+    "title": "API: smoke test",
+    "description": "Проверка API эндпоинтов",
+    "steps": [
+      { "type": "terminal", "command": "curl http://127.0.0.1:8088/health" },
+      { "type": "terminal", "command": "powershell Invoke-WebRequest -Uri 'http://127.0.0.1:8088/workdir' -Headers @{ 'x-agent-secret'='change_me_long_random' } -Method GET | Select-Object -Expand Content" }
+    ]
+  },
+  {
+    "title": "Bot: smoke test",
+    "description": "Проверка команд бота в чате",
+    "steps": [
+      { "type": "note", "content": "В Telegram: /start, затем /ping, /pwd, /cd D\\AI-Agent\\Memory, /cmd /notes" }
+    ]
+  },
+  {
+    "title": "Project: run via API from Cursor",
+    "description": "Запуск ProjectSpec.yml через HTTP API",
+    "steps": [
+      { "type": "terminal", "command": "powershell Invoke-WebRequest -Uri 'http://127.0.0.1:8088/run-spec' -Headers @{ 'x-agent-secret'='A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2' } -Method POST -Body (@{spec_path='D:\\AI-Agent\\ProjectSpec.yml'} | ConvertTo-Json) -ContentType 'application/json' | Select-Object -Expand Content" }
+    ]
+  },
+  {
+    "title": "Security: tighten whitelist + secrets",
+    "description": "Ужесточение whitelist и ротация секретов",
+    "steps": [
+      { "type": "note", "content": "В коде агента очистить WHITELIST_DIRS: только D:\\AI-Agent, D:\\Projects, D:\\Temp" },
+      { "type": "terminal", "command": "$env:AGENT_HTTP_SHARED_SECRET = \"A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2\"; setx AGENT_HTTP_SHARED_SECRET $env:AGENT_HTTP_SHARED_SECRET" },
+      { "type": "note", "content": "Новый TELEGRAM_BOT_TOKEN: 7073794782:AAHgCryXTUXZ0TOvQ7_xZaccTBp_uwm0gvk" }
+    ]
+  },
+  {
+    "title": "API: auth smoke test",
+    "description": "Проверка 401/200 для API",
+    "steps": [
+      { "type": "terminal", "command": "curl http://127.0.0.1:8088/workdir" },
+      { "type": "terminal", "command": "python -c \"import requests; r = requests.get('http://127.0.0.1:8088/workdir', headers={'x-agent-secret': 'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2'}); print('Status:', r.status_code); print('Response:', r.text)\"" }
+    ]
+  },
+  {
+    "title": "Project: run spec (full)",
+    "description": "Полный прогон demo-спецификации",
+    "steps": [
+      { "type": "terminal", "command": "python run_project.py ProjectSpec.yml" },
+      { "type": "terminal", "command": "python Memory/GPT+Deepseek_Agent_memory.py --session Danil-PC --once \"/read D:\\AI-Agent\\Memory\\ops_log.csv\"" }
+    ]
+  },
+  {
+    "title": "API: prompt credentials",
+    "description": "Запросить API URL и SECRET и выставить их в текущей сессии",
+    "steps": [
+      { "type": "terminal", "command": "powershell -ExecutionPolicy Bypass -File .\\cursor\\prompt_api_vars.ps1" }
+    ]
+  },
+  {
+    "title": "API: health (ожидаем 200)",
+    "description": "GET /health (без секрета)",
+    "steps": [
+      { "type": "terminal", "command": "powershell Invoke-WebRequest -Uri \"$env:AGENT_API_URL/health\" -Method GET | Select-Object -Expand Content" }
+    ]
+  },
+  {
+    "title": "API: workdir (без секрета → 401)",
+    "description": "GET /workdir без заголовка",
+    "steps": [
+      { "type": "terminal", "command": "powershell try { (Invoke-WebRequest -Uri \"$env:AGENT_API_URL/workdir\" -Method GET).StatusCode } catch { $_.Exception.Response.StatusCode }" }
+    ]
+  },
+  {
+    "title": "API: workdir (c секретом → pwd)",
+    "description": "GET /workdir с x-agent-secret",
+    "steps": [
+      { "type": "terminal", "command": "powershell Invoke-WebRequest -Uri \"$env:AGENT_API_URL/workdir\" -Headers @{ 'x-agent-secret'=$env:AGENT_API_SECRET } -Method GET | Select-Object -Expand Content" }
+    ]
+  },
+  {
+    "title": "API: cd → pwd",
+    "description": "POST /cd, затем GET /workdir",
+    "steps": [
+      { "type": "terminal", "command": "powershell Invoke-WebRequest -Uri \"$env:AGENT_API_URL/cd\" -Headers @{ 'x-agent-secret'=$env:AGENT_API_SECRET } -Method POST -Body (@{ session='Danil-PC'; path='D:\\\\AI-Agent\\\\Memory' } | ConvertTo-Json) -ContentType 'application/json' | Select-Object -Expand Content" },
+      { "type": "terminal", "command": "powershell Invoke-WebRequest -Uri \"$env:AGENT_API_URL/workdir\" -Headers @{ 'x-agent-secret'=$env:AGENT_API_SECRET } -Method GET | Select-Object -Expand Content" }
+    ]
+  },
+  {
+    "title": "API: command /notes",
+    "description": "POST /command с /notes",
+    "steps": [
+      { "type": "terminal", "command": "powershell (Invoke-WebRequest -Uri \"$env:AGENT_API_URL/command\" -Headers @{ 'x-agent-secret'=$env:AGENT_API_SECRET } -Method POST -Body (@{ session='Danil-PC'; command='/notes' } | ConvertTo-Json) -ContentType 'application/json').Content | ConvertFrom-Json | Select -Expand stdout" }
+    ]
+  },
+  {
+    "title": "API: run ProjectSpec.yml",
+    "description": "POST /run-spec и печать stdout",
+    "steps": [
+      { "type": "terminal", "command": "powershell (Invoke-WebRequest -Uri \"$env:AGENT_API_URL/run-spec\" -Headers @{ 'x-agent-secret'=$env:AGENT_API_SECRET } -Method POST -Body (@{ spec_path='D:\\\\AI-Agent\\\\ProjectSpec.yml' } | ConvertTo-Json) -ContentType 'application/json').Content | ConvertFrom-Json | Select -Expand stdout" }
+    ]
+  },
+  {
+    "title": "API: approve (ручной ввод AP-ID)",
+    "description": "Подтвердить опасное действие по AP-ID",
+    "steps": [
+      { "type": "terminal", "command": "powershell $ap=Read-Host 'Введите approval ID (например AP-1234567890)'; (Invoke-WebRequest -Uri \"$env:AGENT_API_URL/approve\" -Headers @{ 'x-agent-secret'=$env:AGENT_API_SECRET } -Method POST -Body (@{ session='Danil-PC'; approval_id=$ap } | ConvertTo-Json) -ContentType 'application/json').Content | ConvertFrom-Json | Select -Expand stdout" }
+    ]
+  },
+  {
+    "title": "Step4B: setup Cursor bridge",
+    "description": "Настройка моста Agent → Cursor API",
+    "steps": [
+      { "type": "note", "content": "Задайте переменные: $env:CURSOR_API_URL и $env:CURSOR_API_KEY" },
+      { "type": "terminal", "command": "echo \"CURSOR_API_URL: $env:CURSOR_API_URL\"" },
+      { "type": "terminal", "command": "echo \"CURSOR_API_KEY: $($env:CURSOR_API_KEY.Substring(0,5))...\"" }
+    ]
+  },
+  {
+    "title": "Step4B: test cursor proxy",
+    "description": "Тестирование прокси Agent → Cursor",
+    "steps": [
+      { "type": "terminal", "command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\cursor_proxy_tests.ps1" }
+    ]
+  },
+  {
+    "title": "Step4B: cursor open file",
+    "description": "Открытие файла через Cursor API",
+    "steps": [
+      { "type": "terminal", "command": "python -c \"import requests; r = requests.post('http://127.0.0.1:8088/cursor/open', headers={'x-agent-secret': 'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2'}, json={'filepath': 'D:/AI-Agent/README.md'}); print('Status:', r.status_code); print('Response:', r.json())\"" }
+    ]
+  },
+  {
+    "title": "Step4B: cursor insert text",
+    "description": "Вставка текста через Cursor API",
+    "steps": [
+      { "type": "terminal", "command": "python -c \"import requests; r = requests.post('http://127.0.0.1:8088/cursor/insert', headers={'x-agent-secret': 'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2'}, json={'filepath': 'D:/AI-Agent/README.md', 'position': 'end', 'text': '\\nHello from Agent → Cursor!'}); print('Status:', r.status_code); print('Response:', r.json())\"" }
+    ]
+  },
+  {
+    "title": "Step4B: cursor terminal run",
+    "description": "Выполнение команды терминала через Cursor API",
+    "steps": [
+      { "type": "terminal", "command": "python -c \"import requests; r = requests.post('http://127.0.0.1:8088/cursor/terminal', headers={'x-agent-secret': 'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2'}, json={'cwd': 'D:/AI-Agent', 'command': 'dir'}); print('Status:', r.status_code); print('Response:', r.json())\"" }
+    ]
+  },
+  {
+    "title": "Step4B: run cursor spec",
+    "description": "Запуск ProjectSpec с Cursor командами",
+    "steps": [
+      { "type": "terminal", "command": "python -c \"import requests; r = requests.post('http://127.0.0.1:8088/run-spec', headers={'x-agent-secret': 'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2'}, json={'spec_path': 'D:/AI-Agent/ProjectSpec_Cursor.yml'}); print('Status:', r.status_code); print('Response:'); print(r.json()['stdout'])\"" }
+    ]
+  },
+  {
+    "title": "E2E: setup environment",
+    "description": "Подготовка окружения для E2E pipeline",
+    "steps": [
+      { "type": "terminal", "command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\setup_environment.ps1" }
+    ]
+  },
+  {
+    "title": "E2E: start FastAPI agent",
+    "description": "Запуск FastAPI агента",
+    "steps": [
+      { "type": "terminal", "command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\start_fastapi.ps1" }
+    ]
+  },
+  {
+    "title": "E2E: run full pipeline",
+    "description": "Запуск сквозного теста LLM → Agent → File",
+    "steps": [
+      { "type": "terminal", "command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\e2e_agent_pipeline.ps1" }
+    ]
+  },
+  {
+    "title": "E2E: test with custom task",
+    "description": "Запуск pipeline с пользовательской задачей",
+    "steps": [
+      { "type": "terminal", "command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\e2e_agent_pipeline.ps1 -Task \"Добавь в README.md одну строку о новых возможностях проекта (не более 80 символов).\"" }
+    ]
+  },
+  {
+    "title": "E2E: check LM Studio models",
+    "description": "Проверка доступных моделей в LM Studio",
+    "steps": [
+      { "type": "terminal", "command": "powershell Invoke-RestMethod http://127.0.0.1:1234/v1/models | ConvertTo-Json -Depth 5" }
+    ]
+  },
+  {
+    "title": "E2E: test LLM directly",
+    "description": "Прямой тест LLM без агента",
+    "steps": [
+      { "type": "terminal", "command": "powershell $models = (Invoke-RestMethod http://127.0.0.1:1234/v1/models).data; $MODEL = $models[0].id; $body = @{ model = $MODEL; messages = @(@{ role='user'; content='Скажи коротко: Привет из LM Studio' }); temperature = 0.2 } | ConvertTo-Json -Depth 6; Invoke-RestMethod -Method Post -Uri http://127.0.0.1:1234/v1/chat/completions -Headers @{ 'Authorization'='Bearer lm-studio'; 'Content-Type'='application/json' } -Body $body" }
+    ]
+  },
+  {
+    "title": "Ops: Staging Smoke (from selection)",
+    "description": "Smoke check staging сервиса из выделенного текста",
+    "steps": [
+      { "type": "terminal", "command": "pwsh -NoProfile -Command \"$env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8=1; $sel = Get-Clipboard; if (-not $sel) { Write-Host 'No selection'; exit 1 }; $hostLine = ($sel | Select-String -Pattern 'host=([a-zA-Z0-9\\.-:_]+)').Matches.Groups[1].Value; if (-not $hostLine) { Write-Host 'Selection must contain host=<staging-host>'; exit 1 }; $body = @{ host = $hostLine; timeout = 60 } | ConvertTo-Json -Depth 4; $api = $env:WATSON_API_BASE; if (-not $api) { $api = 'http://127.0.0.1:8090' }; Invoke-RestMethod -Uri ($api + '/ops/smoke') -Method POST -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 6 | Write-Output\"" }
+    ]
+  },
+  {
+    "title": "Ops: Deploy (from selection)",
+    "description": "Deploy на staging из выделенного текста",
+    "steps": [
+      { "type": "terminal", "command": "pwsh -NoProfile -Command \"$env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8=1; $sel = Get-Clipboard; if (-not $sel) { Write-Host 'No selection'; exit 1 }; $host = ($sel | Select-String -Pattern 'host=([a-zA-Z0-9\\.-:_]+)').Matches.Groups[1].Value; $ref = ($sel | Select-String -Pattern 'ref=([A-Za-z0-9_\\-\\./]+)').Matches.Groups[1].Value; if (-not $host) { Write-Host 'Need host=...'; exit 1 }; if (-not $ref) { $ref='main' }; $body = @{ host = $host; ref = $ref; timeout = 180 } | ConvertTo-Json -Depth 4; $api = $env:WATSON_API_BASE; if (-not $api) { $api = 'http://127.0.0.1:8090' }; Invoke-RestMethod -Uri ($api + '/ops/deploy') -Method POST -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 6 | Write-Output\"" }
+    ]
+  },
+  {
+    "title": "Ops: Promote (from selection)",
+    "description": "Promote образа на staging из выделенного текста",
+    "steps": [
+      { "type": "terminal", "command": "pwsh -NoProfile -Command \"$env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8=1; $sel = Get-Clipboard; if (-not $sel) { Write-Host 'No selection'; exit 1 }; $host = ($sel | Select-String -Pattern 'host=([a-zA-Z0-9\\.-:_]+)').Matches.Groups[1].Value; $tag = ($sel | Select-String -Pattern 'tag=([A-Za-z0-9_\\-\\.]+)').Matches.Groups[1].Value; if (-not $host -or -not $tag) { Write-Host 'Need host=... tag=...'; exit 1 }; $body = @{ host = $host; tag = $tag; timeout = 120 } | ConvertTo-Json -Depth 4; $api = $env:WATSON_API_BASE; if (-not $api) { $api = 'http://127.0.0.1:8090' }; Invoke-RestMethod -Uri ($api + '/ops/promote') -Method POST -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 6 | Write-Output\"" }
+    ]
+  },
+  {
+    "title": "Ops: Rollback (from selection)",
+    "description": "Rollback версии из выделенного текста",
+    "steps": [
+      { "type": "terminal", "command": "pwsh -NoProfile -Command \"$env:PYTHONIOENCODING='utf-8'; $env:PYTHONUTF8=1; $sel = Get-Clipboard; if (-not $sel) { Write-Host 'No selection'; exit 1 }; $host = ($sel | Select-String -Pattern 'host=([a-zA-Z0-9\\.-:_]+)').Matches.Groups[1].Value; $to = ($sel | Select-String -Pattern 'to=([A-Za-z0-9_\\-\\.]+)').Matches.Groups[1].Value; if (-not $host) { Write-Host 'Need host=...'; exit 1 }; if (-not $to) { $to='prev' }; $body = @{ host = $host; to = $to; timeout = 120 } | ConvertTo-Json -Depth 4; $api = $env:WATSON_API_BASE; if (-not $api) { $api = 'http://127.0.0.1:8090' }; Invoke-RestMethod -Uri ($api + '/ops/rollback') -Method POST -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 6 | Write-Output\"" }
+    ]
+  }
+]

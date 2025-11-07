@@ -1,0 +1,54 @@
+{
+  "tasks": [
+    {
+      "name": "0) Prepare UTF-8 Env",
+      "command": "pwsh -NoProfile -File .\\scripts\\Env-UTF8.ps1",
+      "cwd": "."
+    },
+    {
+      "name": "1) Start API (smart)",
+      "command": "pwsh -NoProfile -File .\\scripts\\Start-WatsonApi.ps1 -Port 8090",
+      "cwd": "."
+    },
+    {
+      "name": "2) Start Telegram Bridge (single)",
+      "command": "pwsh -NoProfile -Command \"Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; py -3.11 -X utf8 scripts\\telegram_bridge.py\"",
+      "cwd": "."
+    },
+    {
+      "name": "3) Start Task Watcher",
+      "command": "py -3.11 -X utf8 scripts\\task_watcher.py",
+      "cwd": "."
+    },
+    {
+      "name": "Relay: Apply+Test (from selection)",
+      "command": "pwsh -NoProfile -Command \"$b=@{text='${selectedText}';dry_run=$false}|ConvertTo-Json -Depth 5; iwr $env:WATSON_API_BASE/relay/submit -Method POST -ContentType 'application/json' -Body $b | % Content\"",
+      "cwd": "."
+    },
+    {
+      "name": "Relay: Dry-Run (from selection)",
+      "command": "pwsh -NoProfile -Command \"$b=@{text='${selectedText}';dry_run=$true }|ConvertTo-Json -Depth 5; iwr $env:WATSON_API_BASE/relay/submit -Method POST -ContentType 'application/json' -Body $b | % Content\"",
+      "cwd": "."
+    },
+    {
+      "name": "Inbox: Create Task from selection (Apply)",
+      "command": "pwsh -NoProfile -File .\\scripts\\make_task.ps1 -Text \"${selectedText}\"",
+      "cwd": "."
+    },
+    {
+      "name": "Inbox: Create Task from selection (Dry-Run)",
+      "command": "pwsh -NoProfile -File .\\scripts\\make_task.ps1 -Text \"${selectedText}\" -DryRun",
+      "cwd": "."
+    },
+    {
+      "name": "Kill Python + Restart Bridge",
+      "command": "pwsh -NoProfile -Command \"Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; py -3.11 -X utf8 scripts\\telegram_bridge.py\"",
+      "cwd": "."
+    },
+    {
+      "name": "Health: API /health",
+      "command": "pwsh -NoProfile -Command \"iwr $env:WATSON_API_BASE/health -TimeoutSec 5 | % Content\"",
+      "cwd": "."
+    }
+  ]
+}

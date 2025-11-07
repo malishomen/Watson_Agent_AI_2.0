@@ -1,0 +1,15 @@
+﻿import os, sysos.environ.setdefault("PY_COLORS", "0")
+os.environ.setdefault("TERM", "dumb")try:
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+except Exception:
+    passtry:
+        colorama.deinit()
+    except Exception:
+        pass
+    try:
+        colorama.init(wrap=False, strip=False, convert=False)
+    except Exception:
+        pass
+except Exception:
+    pass

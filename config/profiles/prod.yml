@@ -1,0 +1,38 @@
+# Production Profile
+environment: prod
+
+api:
+  base_url: https://watson-api.production.com
+  timeout: 900
+
+llm:
+  base_url: ${LLM_BASE_URL}
+  api_key: ${LLM_API_KEY}
+  planner_model: ${PLANNER_MODEL}
+  coder_model: ${CODER_MODEL}
+  temperature: 0.1
+  max_tokens: 8192
+
+paths:
+  repo_path: /app/workspace
+  projects_root: /app/projects
+  inbox: /app/inbox
+
+testing:
+  test_cmd: pytest -v --cov=src --cov-report=xml
+  skip_slow: false
+
+logging:
+  level: WARNING
+  file: logs/prod.log
+
+telegram:
+  enabled: true
+
+monitoring:
+  metrics_enabled: true
+  alerts_enabled: true
+  healthcheck_interval: 60
+
+
+

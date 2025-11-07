@@ -1,0 +1,30 @@
+{
+  "$schema": "https://example.local/cursor-map.schema.json",
+  "auth": {
+    "type": "header",
+    "header_name": "Authorization",
+    "format": "Bearer {token}"
+  },
+  "endpoints": {
+    "editor.open":  { "method": "POST", "path": "/v1/editor/open" },
+    "editor.insert":{ "method": "POST", "path": "/v1/editor/insert" },
+    "editor.replace":{"method": "POST", "path": "/v1/editor/replace" },
+    "editor.save":  { "method": "POST", "path": "/v1/editor/save" },
+    "files.create": { "method": "POST", "path": "/v1/files/create" },
+    "terminal.run": { "method": "POST", "path": "/v1/terminal/run" },
+    "task.run":     { "method": "POST", "path": "/v1/tasks/run" },
+    "chat.prompt":  { "method": "POST", "path": "/v1/chat/complete" },
+    "project.open": { "method": "POST", "path": "/v1/workspace/open" }
+  },
+  "payload_templates": {
+    "editor.open":   { "filepath": "{filepath}", "create_if_missing": true },
+    "editor.insert": { "filepath": "{filepath}", "position": "{position}", "text": "{text}" },
+    "editor.replace":{ "filepath": "{filepath}", "range": "{range}", "text": "{text}" },
+    "editor.save":   { "filepath": "{filepath}" },
+    "files.create":  { "filepath": "{filepath}", "text": "{text}" },
+    "terminal.run":  { "cwd": "{cwd}", "command": "{command}", "timeout_sec": 120 },
+    "task.run":      { "task_id": "{task_id}", "params": "{params}" },
+    "chat.prompt":   { "messages": [{ "role": "user", "content": "{prompt}" }], "stream": false },
+    "project.open":  { "root": "{root}" }
+  }
+}

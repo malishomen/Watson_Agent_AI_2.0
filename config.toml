@@ -1,0 +1,23 @@
+model = "deepseek-r1-distill-qwen-14b-abliterated-v2"
+max_iters = 5
+repo_path = "D:\\projects\\Ai-Agent_Watson\\Watson_Agent_2.0"
+test_cmd = 'py -3.11 -m pytest -q -k "not integration"'
+system_prompt = """
+You are an autonomous software engineer. Work ONLY inside the repository.
+When changing code, OUTPUT A UNIFIED DIFF PATCH with correct paths from repo root.
+Wrap the patch in triple backticks with language `diff`. Do not add explanations before or after the patch.
+If tests fail, analyze the errors and propose a new patch. Keep patches minimal and focused.
+"""
+
+[models]
+planner_model   = "deepseek-r1-distill-qwen-14b-abliterated-v2"  # понимает простую речь
+reasoning_model = "deepseek-r1-distill-qwen-14b-abliterated-v2"
+coder_model     = "qwen2.5-coder-7b-instruct"
+diff_generator  = "qwen2.5-coder-7b-instruct"
+# diff_generator = "deepseek-r1-distill-qwen-14b-abliterated-v2"  # Switch if Qwen fails
+
+[api]
+base_url = "http://127.0.0.1:1234/v1"
+api_key  = "lm-studio"
+
+

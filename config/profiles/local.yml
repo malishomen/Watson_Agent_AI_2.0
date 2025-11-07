@@ -1,0 +1,34 @@
+# Local Development Profile
+environment: local
+
+api:
+  base_url: http://127.0.0.1:8090
+  timeout: 300
+
+llm:
+  base_url: http://127.0.0.1:1234/v1
+  api_key: lm-studio
+  planner_model: deepseek-r1-distill-qwen-14b-abliterated-v2
+  coder_model: qwen2.5-coder-7b-instruct
+  temperature: 0.1
+  max_tokens: 2048
+
+paths:
+  repo_path: D:\projects\Ai-Agent_Watson\Watson_Agent_2.0
+  projects_root: D:\projects\Projects_by_Watson_Local_Agent
+  inbox: D:\projects\Ai-Agent_Watson\Watson_Agent_2.0\inbox
+
+testing:
+  test_cmd: py -3.11 -m pytest -q
+  skip_slow: true
+
+logging:
+  level: DEBUG
+  file: logs/local.log
+
+telegram:
+  enabled: true
+  # TELEGRAM_TOKEN and TELEGRAM_CHAT_ID from env vars
+
+
+

@@ -1,0 +1,351 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "py -3.11 -m pytest -q",
+      "options": { "cwd": "D:\\AI-Agent\\Memory" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Tests (verbose)",
+      "type": "shell",
+      "command": "py -3.11 -m pytest -vv",
+      "options": { "cwd": "D:\\AI-Agent\\Memory" },
+      "problemMatcher": []
+    }
+  ]
+}
+
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "pytest -q",
+      "options": { "cwd": "D:\\AI-Agent\\Memory" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Tests (verbose)",
+      "type": "shell",
+      "command": "pytest -vv",
+      "options": { "cwd": "D:\\AI-Agent\\Memory" },
+      "problemMatcher": []
+    }
+  ]
+}
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "AA: Start API",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "cd D:\\AI-Agent; $env:AGENT_HTTP_SHARED_SECRET='${env:AI_AGENT_HTTP_SECRET}'; uvicorn api.fastapi_agent_fixed:app --host 127.0.0.1 --port 8088 --http h11 --loop asyncio --workers 1 --no-access-log --log-level info"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "AA: Health Check",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "irm -Headers @{ 'x-agent-secret'='${env:AI_AGENT_HTTP_SECRET}' } ${env:AGENT_API_BASE}/health"
+      ]
+    },
+    {
+      "label": "AA: Command (prompt)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "$t = Read-Host 'Command text'; $b = @{ text=$t; session='Cursor' } | ConvertTo-Json -Compress; irm -Method Post ${env:AGENT_API_BASE}/command -Headers @{ 'x-agent-secret'='${env:AI_AGENT_HTTP_SECRET}' } -ContentType 'application/json; charset=utf-8' -Body $b"
+      ]
+    },
+    {
+      "label": "AA: Project Validate (prompt path)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "$p = Read-Host 'spec_path'; $b = @{ spec_path=$p } | ConvertTo-Json -Compress; irm -Method Post ${env:AGENT_API_BASE}/project/validate -Headers @{ 'x-agent-secret'='${env:AI_AGENT_HTTP_SECRET}' } -ContentType 'application/json; charset=utf-8' -Body $b"
+      ]
+    },
+    {
+      "label": "AA: Project Run (prompt id)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "$pid = Read-Host 'project_id'; $b = @{ project_id=$pid; resume=$true } | ConvertTo-Json -Compress; irm -Method Post ${env:AGENT_API_BASE}/project/run -Headers @{ 'x-agent-secret'='${env:AI_AGENT_HTTP_SECRET}' } -ContentType 'application/json; charset=utf-8' -Body $b"
+      ]
+    },
+    {
+      "label": "AA: Project Status (prompt id)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "$pid = Read-Host 'project_id'; irm -Headers @{ 'x-agent-secret'='${env:AI_AGENT_HTTP_SECRET}' } \"${env:AGENT_API_BASE}/project/status?project_id=$pid\""
+      ]
+    },
+    {
+      "label": "AA: Approvals Pending",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "irm -Headers @{ 'x-agent-secret'='${env:AI_AGENT_HTTP_SECRET}' } ${env:AGENT_API_BASE}/approvals/pending"
+      ]
+    },
+    {
+      "label": "AA: Scaffold FastAPI+Postgres",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-File",
+        "scripts/scaffold_fastapi_project.ps1"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Создание нового FastAPI+Postgres+Docker проекта с нуля"
+    },
+    {
+      "label": "AA: Fix PowerShell Profile",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-File",
+        "fix_profile_direct.ps1"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Исправление профиля PowerShell для устранения проблем с кириллицей"
+    },
+    {
+      "label": "AA: Ultimate Profile Fix",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-File",
+        "ultimate_profile_fix.ps1"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Полное исправление профиля PowerShell с тестированием"
+    },
+    {
+      "label": "AA: Final Profile Fix (Batch)",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "FINAL_PROFILE_FIX.bat"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Окончательное исправление профиля через batch файл"
+    },
+    {
+      "label": "AA: RADICAL Profile Fix",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "RADICAL_FIX.bat"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Радикальное исправление - удаление всех профилей и создание чистого"
+    },
+    {
+      "label": "AA: NUCLEAR Profile Fix",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "NUCLEAR_FIX.bat"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Ядерное исправление - полное удаление всех профилей PowerShell"
+    },
+    {
+      "label": "AA: Test Commands (No Cyrillic)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "Write-Host 'Testing commands without Cyrillic prefix...' -ForegroundColor Green; Get-Location; Get-Command prompt -CommandType Function | Select-Object Name,Definition"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Тестирование команд без кириллического префикса"
+    },
+    {
+      "label": "AA: Stack Check A1",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "cd D:\\AI-Agent; D:\\AI-Agent\\venv\\Scripts\\Activate.ps1; $env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'; pip install --upgrade pip wheel; pip install --upgrade fastapi uvicorn requests python-multipart; ls api, parsers, orchestrator, Memory, scripts"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Проверка пакетов и структуры (A1)"
+    },
+    {
+      "label": "AA: LM Studio Check A2",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "irm http://127.0.0.1:1234/v1/models | ConvertTo-Json -Depth 6"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Проверка LM Studio модели (A2)"
+    },
+    {
+      "label": "AA: Start API A3",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "$env:AI_AGENT_HTTP_SECRET='test123'; $env:LMSTUDIO_API_BASE='http://127.0.0.1:1234/v1'; uvicorn api.fastapi_agent_fixed:app --host 127.0.0.1 --port 8088 --http h11 --loop asyncio --workers 1"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Запуск API (A3)"
+    },
+    {
+      "label": "AA: Health Check",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+        "irm http://127.0.0.1:8088/health"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "Проверка здоровья API"
+    },
+    {
+      "label": "AA: Fix PS Profile",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy","Bypass",
+        "-File","scripts\\fix_ps_profile.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "AA: Clean PS Cache (new tab)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy","Bypass",
+        "-Command","'✅ New clean tab'; Write-Host 'Open a NEW Terminal tab (PowerShell) and test: cd D:\\AI-Agent'"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "AA: Start API (NoProfile)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy","Bypass",
+        "-Command",
+        "cd D:\\AI-Agent; D:\\AI-Agent\\venv\\Scripts\\Activate.ps1; $env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'; uvicorn api.fastapi_agent_fixed:app --host 127.0.0.1 --port 8088 --http h11 --loop asyncio --workers 1 --no-access-log --log-level info"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "AA: Clean PowerShell",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-Command", "Write-Host 'Чистый PowerShell запущен ✅' -ForegroundColor Green"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "AA: Verify Cyrillic Fix",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-Command", "cd D:\\AI-Agent; Write-Host 'Команда cd отработала без лишней «с» ✅' -ForegroundColor Green"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "AA: Install Clean Profile",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "install_clean_profile.ps1"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
