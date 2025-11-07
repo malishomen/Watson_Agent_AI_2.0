@@ -49,6 +49,16 @@
       "name": "Health: API /health",
       "command": "pwsh -NoProfile -Command \"iwr $env:WATSON_API_BASE/health -TimeoutSec 5 | % Content\"",
       "cwd": "."
+    },
+    {
+      "name": "🤖 AUTO-FIX: OpenAI Integration (Cursor Boss Mode)",
+      "command": "pwsh -NoProfile -Command \"Write-Host '🚀 Cursor Boss Mode Activated!' -ForegroundColor Green; Write-Host ''; Write-Host '📋 Задача: Починить OpenAI интеграцию' -ForegroundColor Cyan; Write-Host '📄 Инструкции: CURSOR_TASK_OPENAI_FIX.md' -ForegroundColor Yellow; Write-Host ''; Write-Host '⚡ Теперь ОТКРОЙ ФАЙЛ и следуй инструкциям!' -ForegroundColor Magenta; code CURSOR_TASK_OPENAI_FIX.md\"",
+      "cwd": "."
+    },
+    {
+      "name": "Health: OpenAI /health/openai",
+      "command": "pwsh -NoProfile -Command \"iwr $env:WATSON_API_BASE/health/openai -TimeoutSec 10 | % Content\"",
+      "cwd": "."
     }
   ]
 }
