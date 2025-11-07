@@ -562,10 +562,10 @@ class ChatReq(BaseModel):
 
 def get_cursor_client():
     try:
-        from cursor_bridge.cursor_client import CursorClient
+        from api.misc.cursor_bridge.cursor_client import CursorClient
         return CursorClient()
-    except ImportError:
-        raise HTTPException(status_code=503, detail="Cursor bridge not available")
+    except ImportError as e:
+        raise HTTPException(status_code=503, detail=f"Cursor bridge not available: {str(e)}")
 
 def require_secret(x_agent_secret: Optional[str] = Header(None)):
     check_auth(x_agent_secret)

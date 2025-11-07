@@ -21,6 +21,11 @@ function Start-Uvicorn([string]$repo, [string]$bindHost, [int]$port) {
   $env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = 1
   $env:TELEGRAM_TOKEN = [Environment]::GetEnvironmentVariable('TELEGRAM_TOKEN','User')
   $env:TELEGRAM_CHAT_ID = [Environment]::GetEnvironmentVariable('TELEGRAM_CHAT_ID','User')
+  
+  # Cursor API integration
+  $env:CURSOR_API_URL = [Environment]::GetEnvironmentVariable('CURSOR_API_URL','User')
+  $env:CURSOR_API_KEY = [Environment]::GetEnvironmentVariable('CURSOR_API_KEY','User')
+  $env:AGENT_HTTP_SHARED_SECRET = [Environment]::GetEnvironmentVariable('AGENT_HTTP_SHARED_SECRET','User')
 
   Push-Location $repo
   try {
