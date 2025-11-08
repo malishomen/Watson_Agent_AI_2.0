@@ -145,8 +145,36 @@ def plan_and_route(text: str, llm_client=None) -> Dict[str, Any]:
                 "normalized_text": f"создать проект {project_name}"
             }
     
-    # Все остальное - кодовая задача
-    return {"intent": "code", "args": {"task": t}}
+    # Нормализация естественного языка в задачу
+    # Ищем описания проблем и преобразуем в actionable задачи
+    normalized_text = t
+    
+    # Паттерны проблем → задачи
+    problem_patterns = [
+        (r'(.+?)\s+не работает', r'Исправить: \1'),
+        (r'проблема[:\s]+(.+)', r'Исправить проблему: \1'),
+        (r'баг[:\s]+(.+)', r'Исправить баг: \1'),
+        (r'(.+?)\s+каждый раз\s+(.+)', r'Исправить: \1 постоянно \2'),
+        (r'логика\s+(.+?)\s+не работает', r'Исправить логику: \1'),
+        (r'(.+?)\s+просит\s+(.+)', r'Убрать запрос: \1 просит \2'),
+    ]
+    
+    for pattern, replacement in problem_patterns:
+        match = re.search(pattern, t.lower())
+        if match:
+            try:
+                # Пытаемся нормализовать текст
+                normalized_text = re.sub(pattern, replacement, t, flags=re.IGNORECASE)
+                break
+            except:
+                pass
+    
+    # Все остальное - кодовая задача (с нормализованным текстом если удалось)
+    return {
+        "intent": "code",
+        "args": {"task": t},
+        "normalized_text": normalized_text if normalized_text != t else t
+    }
 
 def do_project_create(project_name: str, repo_path: str = None) -> Dict[str, Any]:
     """Создает новый проект используя PROJECT_TEMPLATE.ps1"""

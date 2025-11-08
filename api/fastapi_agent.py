@@ -233,12 +233,33 @@ def _load_cfg():
 
 @app.post("/autocode/generate", response_model=AutoCodeGenOut)
 def autocode_generate(body: AutoCodeGenIn):
-    # Валидация задачи перед обработкой
-    coding_keywords = ['add', 'fix', 'refactor', 'test', 'implement', 'create', 'update', 'remove', 'change',
-                       'лог', 'тип', 'исправ', 'рефактор', 'добав', 'созда', 'измен', 'удал']
-    if not any(kw in body.task.lower() for kw in coding_keywords):
+    # Мягкая валидация задачи - принимаем описания проблем и баг-репорты
+    coding_keywords = [
+        # Действия
+        'add', 'fix', 'refactor', 'test', 'implement', 'create', 'update', 'remove', 'change',
+        'добав', 'созда', 'измен', 'удал', 'исправ', 'рефактор',
+        # Проблемы и баги
+        'bug', 'issue', 'problem', 'error', 'не работает', 'проблема', 'баг', 'ошибка',
+        'просит', 'требует', 'запрашивает', 'каждый раз', 'логика не работает',
+        # Технические термины
+        'функци', 'модуль', 'компонент', 'auth', 'login', 'email', 'пин', 'код',
+        'ссылк', 'вход', 'авториз', 'логин'
+    ]
+    
+    # Минимальная длина задачи
+    if len(body.task.strip()) < 10:
         raise HTTPException(status_code=400, 
-                          detail="Это не похоже на кодовую задачу. Пример: 'Add logging to function X'.")
+                          detail="Задача слишком короткая. Опишите проблему подробнее.")
+    
+    # Если хотя бы одно ключевое слово найдено ИЛИ задача длинная (>30 символов)
+    # - считаем её потенциально кодовой
+    task_lower = body.task.lower()
+    has_keyword = any(kw in task_lower for kw in coding_keywords)
+    is_descriptive = len(body.task.strip()) > 30
+    
+    if not (has_keyword or is_descriptive):
+        raise HTTPException(status_code=400, 
+                          detail="Опишите задачу подробнее или укажите что нужно сделать.")
     
     repo_cfg, test_cfg, models_cfg = _load_cfg()
     repo = body.repo_path or repo_cfg
